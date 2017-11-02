@@ -1,0 +1,51 @@
+#!/bin/bash
+##################################################################################
+# The dd-wrt-update script is designed to inject iptables rules for mac filtering.
+# Last tested with Firmware: DD-WRT v3.0-r33525 (10/17/17)
+# Router needs to have:
+# ___ SSH
+#   ___ Enable Services/Secure Shell/SSHd
+#   ___ Services/Secure Shell/Authorized Keys/(Add your key)
+#   ___ * Click Save Settings
+#   ___ * Click Apply Settings
+#   ___ Enable Administration/Remote Access/SSH Management
+#   ___ * Click Save Settings
+#   ___ * Click Apply Settings
+#
+# ___ Enable JFFS
+#   ___ Enable Administration/JFFS2 Support/Internal Flash Storage
+#   ___ Enable Administration/JFFS2 Support/Clean Internal Flash Storage
+#   ___ * Click Apply Settings  (Do not click Save)
+#   ___ Disable Administration/JFFS2 Support/Clean Internal Flash Storage
+#   ___ * Click Save Settings
+#   ___ * Click Apply Settings
+##################################################################################
+#
+# Set some variables to avoid mistakes
+IPTABLESFILE="/etc/tools/iptables.dd-wrt"
+
+
+echo "Running mac address validation ..."
+/etc/tools/mac-test
+echo "... done running mac address validation."
+
+echo "Composing iptables file ..."
+echo "#!/bin/sh" > ${IPTABLESFILE}
+
+# Dump the mac addresses to the new file
+grep mgwireless /etc/dhcp/dhcpd.conf | awk -F{ '{print $2}' | awk '{print "iptables -I INPUT " NR+1,"-i br0 -m mac --mac-source "tolower(substr($3,1,length($3)-1))" -j ACCEPT"} END{print "iptables -I INPUT " NR+2,"-i br0 -p udp -j DROP"}' >> ${IPTABLESFILE}
+
+echo "... done composing iptables file."
+
+# Now push the completed iptables file out and reload the rules.
+# Just add an entry for each ip of configured router.
+for i in xxx.xxx.xxx.xxx xxx.xxx.xxx.xxx
+do
+	echo "Sending iptables updtes to dd-wrt router ${i}"
+	#FIXME
+	echo "scp ${IPTABLESFILE} root@${i}:/jffs/etc/config/macfilter.wanup"
+	ssh root@${i} 'mkdir -p /jffs/etc/config'
+	scp ${IPTABLESFILE} root@${i}:/jffs/etc/config/macfilter.wanup
+	ssh root@${i} 'chmod 755 /jffs/etc/config/macfilter.wanup; reboot'
+done
+exit 0
