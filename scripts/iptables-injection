@@ -24,11 +24,6 @@
 # Set some variables to avoid mistakes
 IPTABLESFILE="/etc/tools/iptables.dd-wrt"
 
-
-echo "Running mac address validation ..."
-/etc/tools/mac-test
-echo "... done running mac address validation."
-
 echo "Composing iptables file ..."
 echo "#!/bin/sh" > ${IPTABLESFILE}
 
