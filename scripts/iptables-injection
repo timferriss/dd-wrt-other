@@ -28,12 +28,12 @@ echo "Composing iptables file ..."
 echo "#!/bin/sh" > ${IPTABLESFILE}
 
 # Dump the mac addresses to the new file
-grep mgwireless /etc/dhcp/dhcpd.conf | awk -F{ '{print $2}' | awk '{print "iptables -I INPUT " NR+1,"-i br0 -m mac --mac-source "tolower(substr($3,1,length($3)-1))" -j ACCEPT"} END{print "iptables -I INPUT " NR+2,"-i br0 -p udp -j DROP"}' >> ${IPTABLESFILE}
+grep wireless /etc/dhcp/dhcpd.conf | awk -F{ '{print $2}' | awk '{print "iptables -I INPUT " NR+1,"-i br0 -m mac --mac-source "tolower(substr($3,1,length($3)-1))" -j ACCEPT"} END{print "iptables -I INPUT " NR+2,"-i br0 -p udp -j DROP"}' >> ${IPTABLESFILE}
 
 echo "... done composing iptables file."
 
 # Now push the completed iptables file out and reload the rules.
-# Just add an entry for each ip of configured router.
+# Just add an entry for each configured router you want to apply mac filtering.
 for i in xxx.xxx.xxx.xxx xxx.xxx.xxx.xxx
 do
 	echo "Sending iptables updtes to dd-wrt router ${i}"
